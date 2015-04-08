@@ -16,13 +16,17 @@ var fsm = function(){
 	var x2 = parseInt(c2.getAttribute("cx"));
 	var y1 = parseInt(c1.getAttribute("cy"));
 	var y2 = parseInt(c2.getAttribute("cy"));
+	var theta = Math.atan((y2 - y1)/(x2 - x1));
 	var tgroup = document.querySelector("g[ids='"+Math.min(id1,id2)+" "+Math.max(id1,id2)+"']");
 	if(tgroup == null) {
 	    tgroup = transitions.appendChild(document.createElementNS("http://www.w3.org/2000/svg","g"));
 	    tgroup.setAttribute("ids",Math.min(id1,id2)+" "+Math.max(id1,id2));
 	}
 	var n = tgroup.childNodes.length;
-	newT.setAttribute("d", "M"+x1+" "+y1+" C"+x1+" "+(y1 + Math.floor((n+1)/2)*Math.pow(-1,n)*50)+" "+x2+" "+(y2 + Math.floor((n+1)/2)*Math.pow(-1,n)*50)+" "+x2+" "+y2);
+	var controlDist = Math.floor((n+1)/2)*30*Math.pow(-1,n);
+	var dx = controlDist * Math.sin(theta);
+	var dy = -1 * controlDist * Math.cos(theta);
+	newT.setAttribute("d", "M"+x1+" "+y1+" C"+(x1 + dx)+" "+(y1 + dy)+" "+(x2 + dx)+" "+(y2 + dy)+" "+x2+" "+y2);
 	newT.setAttribute("stroke","black");
 	newT.setAttribute("fill","none");
 	tgroup.appendChild(newT);
