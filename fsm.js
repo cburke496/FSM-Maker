@@ -1,6 +1,10 @@
 var fsm = function(){
-    var svg = document.getElementById("svg");
+    var stateRad = 10;
+
+    var svg = document.querySelector("svg");
     var body = document.querySelector("body");
+    var sButton = document.querySelector("#newStates");
+    var tButton = document.querySelector("#newTransitions");
     var transitions = svg.appendChild(document.createElementNS("http://www.w3.org/2000/svg","g"));
     var states = svg.appendChild(document.createElementNS("http://www.w3.org/2000/svg","g"));
 
@@ -25,21 +29,39 @@ var fsm = function(){
 	return newT;
     };
 	
-    var makeState = function(x, y, r) {
+    var makeState = function(x, y) {
 	var newCirc = document.createElementNS("http://www.w3.org/2000/svg","circle");
 	newCirc.setAttribute("cx", x);
 	newCirc.setAttribute("cy", y);
-	newCirc.setAttribute("r", r);
+	newCirc.setAttribute("r", stateRad);
 	newCirc.setAttribute("stateID", states.childNodes.length);
 	newCirc.setAttribute("fill","white");
 	newCirc.setAttribute("stroke","black");
 	states.appendChild(newCirc);
 	    return newCirc;
     };
+
+    var setupSButton = function() {
+	var el = function(e) {
+	    makeState(e.x,e.y);
+	}
+
+	sButton.onclick = function(e) {
+	    if(sButton.className === "toggledOn") {
+		sButton.className = "";
+		svg.removeEventListener("mouseup",el);
+	    } else {
+		sButton.className = "toggledOn";
+		svg.addEventListener("mouseup",el);
+	    }
+	} 
+    }
     
     return function(){
-	var state1 = makeState(50,50,10);
-	var state2 = makeState(100,100,10);
+	setupSButton();
+
+	var state1 = makeState(50,50);
+	var state2 = makeState(100,100);
 	var t1 = makeTransition(state1, state2);
 	var t2 = makeTransition(state1, state2);
 	var t3 = makeTransition(state1, state2);
