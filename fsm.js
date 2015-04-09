@@ -8,6 +8,10 @@ var fsm = function(){
     var transitions = svg.appendChild(document.createElementNS("http://www.w3.org/2000/svg","g"));
     var states = svg.appendChild(document.createElementNS("http://www.w3.org/2000/svg","g"));
 
+    var selectedState = null;
+    var drawingTransitions = false;
+    var drawingStates = false;
+
     var makeTransition = function(c1, c2) {
 	var newT = document.createElementNS("http://www.w3.org/2000/svg","path");
 	var id1 = c1.getAttribute("stateID");
@@ -42,32 +46,75 @@ var fsm = function(){
 	newCirc.setAttribute("fill","white");
 	newCirc.setAttribute("stroke","black");
 	states.appendChild(newCirc);
-	    return newCirc;
+
+	newCirc.addEventListener("mouseup",function() {
+	    if(drawingTransitions) {
+		if(selectedState === this) {
+		    deselect(this);
+		} else if(selectedState === null) {
+		    select(this);
+		} else {
+		    makeTransition(this,selectedState);
+		    deselect(selectedState);
+		}
+	    }
+	});	    
+	
+	return newCirc;
     };
-
+    
     var setupSButton = function() {
-	var el = function(e) {
-	    makeState(e.x,e.y);
+	svg.onclick = function(e) {
+	    if(drawingStates)
+		makeState(e.x,e.y);
 	}
-
+	
 	sButton.onclick = function(e) {
-	    if(sButton.className === "toggledOn") {
-		sButton.className = "";
-		svg.removeEventListener("mouseup",el);
-	    } else {
+	    var drawing = drawingStates;
+	    toggleOffAllButtons();
+	    
+	    if(!drawing) {
+		drawingStates = true;
 		sButton.className = "toggledOn";
-		svg.addEventListener("mouseup",el);
 	    }
 	} 
     }
     
+    var setupTButton = function() {
+	tButton.onclick = function() {
+	    var drawing = drawingTransitions;
+	    toggleOffAllButtons();
+	    
+	    if(!drawing) {
+		drawingTransitions = true;
+		this.className = "toggledOn";
+	    }
+	}
+    }
+    
+    var select = function(state) {
+	state.setAttribute("stroke","#00ccff");
+	state.setAttribute("stroke-width","2px");
+	selectedState = state;
+    }
+    
+    var deselect = function(state) {
+	state.setAttribute("stroke","black");
+	state.setAttribute("stroke-width","1px");
+	selectedState = null;
+    }
+    
+    var toggleOffAllButtons = function() {
+	sButton.className = "";
+	drawingStates = false;
+	
+	tButton.className = "";
+	drawingTransitions = false;
+	if(selectedState) deselect(selectedState);
+    }
+    
     return function(){
 	setupSButton();
-
-	var state1 = makeState(50,50);
-	var state2 = makeState(100,100);
-	var t1 = makeTransition(state1, state2);
-	var t2 = makeTransition(state1, state2);
-	var t3 = makeTransition(state1, state2);
+	setupTButton();
     }
 }()()
