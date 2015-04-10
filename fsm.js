@@ -5,17 +5,21 @@ var fsm = function(){
     var body = document.querySelector("body");
     var sButton = document.querySelector("#newStates");
     var tButton = document.querySelector("#newTransitions");
+    var dsButton = document.querySelector("#deleteStates");
+    var dtButton = document.querySelector("#deleteTransitions");
     var transitions = svg.appendChild(document.createElementNS("http://www.w3.org/2000/svg","g"));
     var states = svg.appendChild(document.createElementNS("http://www.w3.org/2000/svg","g"));
 
     var selectedState = null;
-    var drawingTransitions = false;
     var drawingStates = false;
+    var drawingTransitions = false;
+    var deletingStates = false;
+    var deletingTransitions = false;
 
     var makeTransition = function(c1, c2) {
 	var newT = document.createElementNS("http://www.w3.org/2000/svg","path");
-	var id1 = c1.getAttribute("stateID");
-	var id2 = c2.getAttribute("stateID");
+	var id1 = c1.getAttribute("stateid");
+	var id2 = c2.getAttribute("stateid");
 	var x1 = parseInt(c1.getAttribute("cx"));
 	var x2 = parseInt(c2.getAttribute("cx"));
 	var y1 = parseInt(c1.getAttribute("cy"));
@@ -34,19 +38,25 @@ var fsm = function(){
 	newT.setAttribute("stroke","black");
 	newT.setAttribute("fill","none");
 	tgroup.appendChild(newT);
+	
+	newT.addEventListener("mouseup",function() {
+	    if(deletingTransitions)
+		this.parentNode.removeChild(this);
+	});
+	
 	return newT;
     };
-	
+    
     var makeState = function(x, y) {
 	var newCirc = document.createElementNS("http://www.w3.org/2000/svg","circle");
 	newCirc.setAttribute("cx", x);
 	newCirc.setAttribute("cy", y);
 	newCirc.setAttribute("r", stateRad);
-	newCirc.setAttribute("stateID", states.childNodes.length);
+	newCirc.setAttribute("stateid", states.childNodes.length);
 	newCirc.setAttribute("fill","white");
 	newCirc.setAttribute("stroke","black");
 	states.appendChild(newCirc);
-
+	
 	newCirc.addEventListener("mouseup",function() {
 	    if(drawingTransitions) {
 		if(selectedState === this) {
@@ -58,12 +68,22 @@ var fsm = function(){
 		    deselect(selectedState);
 		}
 	    }
+	    
+	    if(deletingStates) {
+		for(var i = transitions.childNodes.length - 1; i >= 0; i--) {
+		    var ids = transitions.childNodes[i].getAttribute("ids").split(" ");
+		    if(ids[0] === "" + this.getAttribute("stateid") ||
+		      ids[1] === "" + this.getAttribute("stateid"))
+			transitions.childNodes[i].innerHTML = "";
+		}
+		this.parentNode.removeChild(this);
+	    }
 	});	    
 	
 	return newCirc;
     };
     
-    var setupSButton = function() {
+    var setupNSButton = function() {
 	svg.onclick = function(e) {
 	    if(drawingStates)
 		makeState(e.x,e.y);
@@ -80,13 +100,37 @@ var fsm = function(){
 	} 
     }
     
-    var setupTButton = function() {
+    var setupNTButton = function() {
 	tButton.onclick = function() {
 	    var drawing = drawingTransitions;
 	    toggleOffAllButtons();
 	    
 	    if(!drawing) {
 		drawingTransitions = true;
+		this.className = "toggledOn";
+	    }
+	}
+    }
+
+    var setupDSButton = function() {
+	dsButton.onclick = function() {
+	    var deleting = deletingStates;
+	    toggleOffAllButtons();
+
+	    if(!deleting) {
+		deletingStates = true;
+		this.className = "toggledOn";
+	    }
+	}
+    }
+
+    var setupDTButton = function() {
+	dtButton.onclick = function() {
+	    var deleting = deletingTransitions;
+	    toggleOffAllButtons();
+	    
+	    if(!deleting) {
+		deletingTransitions = true;
 		this.className = "toggledOn";
 	    }
 	}
@@ -111,10 +155,18 @@ var fsm = function(){
 	tButton.className = "";
 	drawingTransitions = false;
 	if(selectedState) deselect(selectedState);
+    
+	dsButton.className = "";
+	deletingStates = false;
+
+	dtButton.className = "";
+	deletingTransitions = false;
     }
     
     return function(){
-	setupSButton();
-	setupTButton();
+	setupNSButton();
+	setupNTButton();
+	setupDSButton();
+	setupDTButton();
     }
 }()()
