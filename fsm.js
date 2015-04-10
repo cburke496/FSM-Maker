@@ -1,6 +1,7 @@
 var fsm = function(){
     var stateRad = 20;
     var transWidth = "3px";
+    var stateWidth = "1px";
 
     var svg = document.querySelector("svg");
     var body = document.querySelector("body");
@@ -16,6 +17,8 @@ var fsm = function(){
     var drawingTransitions = false;
     var deletingStates = false;
     var deletingTransitions = false;
+
+    var totalNumStates = 0;
 
     var makeTransition = function(c1, c2) {
 	var newT = document.createElementNS("http://www.w3.org/2000/svg","path");
@@ -65,7 +68,7 @@ var fsm = function(){
 	newCirc.setAttribute("cx", x);
 	newCirc.setAttribute("cy", y);
 	newCirc.setAttribute("r", stateRad);
-	newCirc.setAttribute("stateid", states.childNodes.length);
+	newCirc.setAttribute("stateid", totalNumStates);
 	newCirc.setAttribute("fill","white");
 	newCirc.setAttribute("stroke","black");
 	states.appendChild(newCirc);
@@ -87,12 +90,14 @@ var fsm = function(){
 		    var ids = transitions.childNodes[i].getAttribute("ids").split(" ");
 		    if(ids[0] === "" + this.getAttribute("stateid") ||
 		      ids[1] === "" + this.getAttribute("stateid"))
-			transitions.childNodes[i].innerHTML = "";
+			transitions.removeChild(transitions.childNodes[i]);
 		}
 		this.parentNode.removeChild(this);
 	    }
 	});	    
 	
+	totalNumStates++;
+
 	return newCirc;
     };
     
@@ -133,6 +138,11 @@ var fsm = function(){
 	    if(!deleting) {
 		deletingStates = true;
 		this.className = "toggledOn";
+		var allStates = document.getElementsByTagName("circle");
+		for(var i = 0; i < allStates.length; i++) {
+		    allStates[i].setAttribute("stroke","red");
+		    allStates[i].setAttribute("stroke-width","3px");
+		}
 	    }
 	}
     }
@@ -176,6 +186,11 @@ var fsm = function(){
     
 	dsButton.className = "";
 	deletingStates = false;
+	var allStates = document.getElementsByTagName("circle");
+	for(var i = 0; i < allStates.length; i++) {
+	    allStates[i].setAttribute("stroke","black");
+	    allStates[i].setAttribute("stroke-width",stateWidth);
+	}
 
 	dtButton.className = "";
 	deletingTransitions = false;
