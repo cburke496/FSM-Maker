@@ -1,5 +1,6 @@
 var fsm = function(){
-    var stateRad = 10;
+    var stateRad = 20;
+    var transWidth = "3px";
 
     var svg = document.querySelector("svg");
     var body = document.querySelector("body");
@@ -36,12 +37,24 @@ var fsm = function(){
 	var dy = -1 * controlDist * Math.cos(theta);
 	newT.setAttribute("d", "M"+x1+" "+y1+" C"+(x1 + dx)+" "+(y1 + dy)+" "+(x2 + dx)+" "+(y2 + dy)+" "+x2+" "+y2);
 	newT.setAttribute("stroke","black");
+	newT.setAttribute("stroke-width",transWidth);
 	newT.setAttribute("fill","none");
 	tgroup.appendChild(newT);
 	
 	newT.addEventListener("mouseup",function() {
-	    if(deletingTransitions)
-		this.parentNode.removeChild(this);
+	    if(deletingTransitions) {
+		var parent = this.parentNode;
+		var numSiblings = parent.childNodes.length - 1;
+		var ids = parent.getAttribute("ids").split(" ");
+		var twoStates = [document.querySelector("circle[stateid='"+ids[0]+"']"),document.querySelector("circle[stateid='"+ids[1]+"']")];
+		parent.innerHTML = "";
+		for(var i = 0; i < numSiblings; i++) {
+		    //NOTE: If/when I eventually implement labels for transitions, they need to be carried over here
+		    var t = makeTransition(twoStates[0],twoStates[1]);
+		    t.setAttribute("stroke","red");
+		    t.setAttribute("stroke-width","8px");
+		} 
+	    }
 	});
 	
 	return newT;
@@ -132,6 +145,11 @@ var fsm = function(){
 	    if(!deleting) {
 		deletingTransitions = true;
 		this.className = "toggledOn";
+		var allTransitions = document.getElementsByTagName("path");
+		for(var i = 0; i < allTransitions.length; i++) {
+		    allTransitions[i].setAttribute("stroke","red");
+		    allTransitions[i].setAttribute("stroke-width","8px");
+		}
 	    }
 	}
     }
@@ -161,6 +179,11 @@ var fsm = function(){
 
 	dtButton.className = "";
 	deletingTransitions = false;
+	var allTransitions = document.getElementsByTagName("path");
+	for(var i = 0; i < allTransitions.length; i++) {
+	    allTransitions[i].setAttribute("stroke","black");
+	    allTransitions[i].setAttribute("stroke-width",transWidth);
+	}
     }
     
     return function(){
