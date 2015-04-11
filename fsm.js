@@ -20,6 +20,8 @@ var fsm = function(){
 
     var totalNumStates = 0;
 
+    //Returns a list. The first element is the "path" of the transition and the
+    //second element is the "polygon" of the arrow
     var makeTransition = function(c1, c2) {
 	var newT = document.createElementNS("http://www.w3.org/2000/svg","path");
 	var id1 = c1.getAttribute("stateid");
@@ -34,7 +36,7 @@ var fsm = function(){
 	    tgroup = transitions.appendChild(document.createElementNS("http://www.w3.org/2000/svg","g"));
 	    tgroup.setAttribute("ids",Math.min(id1,id2)+" "+Math.max(id1,id2));
 	}
-	var n = tgroup.childNodes.length;
+	var n = tgroup.childNodes.length/2;
 	var controlDist = Math.floor((n+1)/2)*30*Math.pow(-1,n);
 	var dx = controlDist * Math.sin(theta);
 	var dy = -1 * controlDist * Math.cos(theta);
@@ -42,25 +44,54 @@ var fsm = function(){
 	newT.setAttribute("stroke","black");
 	newT.setAttribute("stroke-width",transWidth);
 	newT.setAttribute("fill","none");
+	newT.setAttribute("sourceid",id1);
+
+
+	var arrowX = (x1 + x2)/2 + (controlDist*3/4 * Math.sin(theta));
+	var arrowY = (y1 + y2)/2 - (controlDist*3/4 * Math.cos(theta));
+	var newTheta = theta * 180 / Math.PI;
+	newTheta = x1 < x2 ? newTheta : newTheta + 180
+	
+	var arrow = document.createElementNS("http://www.w3.org/2000/svg","polygon");
+	arrow.setAttribute("fill","black");
+	arrow.setAttribute("stroke","black");
+	arrow.setAttribute("stroke-width","0px");
+	arrow.setAttribute("points",(arrowX + 10)+","+(arrowY)+" "+(arrowX - 5)+","+(arrowY - 5)+" "+(arrowX - 5)+","+(arrowY + 5));
+	arrow.setAttribute("transform","rotate("+newTheta+" "+arrowX+" "+arrowY+")");
+
+	tgroup.appendChild(arrow);
 	tgroup.appendChild(newT);
 	
 	newT.addEventListener("mouseup",function() {
 	    if(deletingTransitions) {
 		var parent = this.parentNode;
-		var numSiblings = parent.childNodes.length - 1;
+		var numSiblings = (parent.childNodes.length - 2)/2;
 		var ids = parent.getAttribute("ids").split(" ");
+
+		var numForwardArrows = 0;
+		for(var i = 0; i < numSiblings + 1; i++) {
+		    var sib = parent.childNodes[i*2 + 1];
+		    if(sib.getAttribute("sourceid") == ids[0]) 
+			numForwardArrows++;
+		}
+		if(this.getAttribute("sourceid") == ids[0]) 
+		    numForwardArrows--;
+
 		var twoStates = [document.querySelector("circle[stateid='"+ids[0]+"']"),document.querySelector("circle[stateid='"+ids[1]+"']")];
 		parent.innerHTML = "";
 		for(var i = 0; i < numSiblings; i++) {
 		    //NOTE: If/when I eventually implement labels for transitions, they need to be carried over here
-		    var t = makeTransition(twoStates[0],twoStates[1]);
-		    t.setAttribute("stroke","red");
-		    t.setAttribute("stroke-width","8px");
+		    var t = i < numForwardArrows ? makeTransition(twoStates[0],twoStates[1]) : makeTransition(twoStates[1],twoStates[0]);
+		    t[0].setAttribute("stroke","red");
+		    t[0].setAttribute("stroke-width","8px");
+		    t[1].setAttribute("fill","red");
+		    t[1].setAttribute("stroke","red");
+		    t[1].setAttribute("stroke-width","8px");
 		} 
 	    }
 	});
 	
-	return newT;
+	return [newT,arrow];
     };
     
     var makeState = function(x, y) {
@@ -80,7 +111,7 @@ var fsm = function(){
 		} else if(selectedState === null) {
 		    select(this);
 		} else {
-		    makeTransition(this,selectedState);
+		    makeTransition(selectedState, this);
 		    deselect(selectedState);
 		}
 	    }
@@ -160,6 +191,12 @@ var fsm = function(){
 		    allTransitions[i].setAttribute("stroke","red");
 		    allTransitions[i].setAttribute("stroke-width","8px");
 		}
+		var allArrows = document.getElementsByTagName("polygon");
+		for(var i = 0; i < allArrows.length; i++) {
+		    allArrows[i].setAttribute("stroke","red");
+		    allArrows[i].setAttribute("stroke-width","8px");
+		    allArrows[i].setAttribute("fill","red");
+		}
 	    }
 	}
     }
@@ -198,6 +235,12 @@ var fsm = function(){
 	for(var i = 0; i < allTransitions.length; i++) {
 	    allTransitions[i].setAttribute("stroke","black");
 	    allTransitions[i].setAttribute("stroke-width",transWidth);
+	}
+	var allArrows = document.getElementsByTagName("polygon");
+	for(var i = 0; i < allArrows.length; i++) {
+	    allArrows[i].setAttribute("stroke","black");
+	    allArrows[i].setAttribute("fill","black");
+	    allArrows[i].setAttribute("stroke-width","0px");
 	}
     }
     
