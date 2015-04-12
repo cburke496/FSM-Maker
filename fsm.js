@@ -11,6 +11,7 @@ var fsm = function(){
     var dtButton = document.querySelector("#deleteTransitions");
     var transitions = svg.appendChild(document.createElementNS("http://www.w3.org/2000/svg","g"));
     var states = svg.appendChild(document.createElementNS("http://www.w3.org/2000/svg","g"));
+    var tLabels = svg.appendChild(document.createElementNS("http://www.w3.org/2000/svg","g"));
 
     var selectedState = null;
     var drawingStates = false;
@@ -19,10 +20,11 @@ var fsm = function(){
     var deletingTransitions = false;
 
     var totalNumStates = 0;
+    var totalNumTransitions = 0;
 
     //Returns a list. The first element is the "path" of the transition and the
     //second element is the "polygon" of the arrow
-    var makeTransition = function(c1, c2) {
+    var makeTransition = function(c1, c2, labelText) {
 	var newT = document.createElementNS("http://www.w3.org/2000/svg","path");
 	var id1 = c1.getAttribute("stateid");
 	var id2 = c2.getAttribute("stateid");
@@ -37,13 +39,14 @@ var fsm = function(){
 	    tgroup.setAttribute("ids",Math.min(id1,id2)+" "+Math.max(id1,id2));
 	}
 	var n = tgroup.childNodes.length/2;
-	var controlDist = Math.floor((n+1)/2)*30*Math.pow(-1,n);
+	var controlDist = Math.floor((n+1)/2)*40*Math.pow(-1,n);
 	var dx = controlDist * Math.sin(theta);
 	var dy = -1 * controlDist * Math.cos(theta);
 	newT.setAttribute("d", "M"+x1+" "+y1+" C"+(x1 + dx)+" "+(y1 + dy)+" "+(x2 + dx)+" "+(y2 + dy)+" "+x2+" "+y2);
 	newT.setAttribute("stroke","black");
 	newT.setAttribute("stroke-width",transWidth);
 	newT.setAttribute("fill","none");
+	newT.setAttribute("transid",totalNumTransitions++);
 	newT.setAttribute("sourceid",id1);
 
 
@@ -61,6 +64,19 @@ var fsm = function(){
 
 	tgroup.appendChild(arrow);
 	tgroup.appendChild(newT);
+
+	var label = document.createElementNS("http://www.w3.org/2000/svg","text");
+	var labelDist = 8;
+	var labelX = arrowX + (labelDist * Math.sin(theta));
+	var labelY = arrowY - (labelDist * Math.cos(theta));
+	label.setAttribute("x", labelX);
+	label.setAttribute("y", labelY);
+	label.setAttribute("font-size","15px");
+	label.setAttribute("text-anchor","middle");
+	label.setAttribute("labelid",newT.getAttribute("transid"));
+	var temp = (labelText === undefined ? String.fromCharCode(949) : labelText);
+	label.appendChild(document.createTextNode(temp));
+	tLabels.appendChild(label);
 	
 	newT.addEventListener("mouseup",function() {
 	    if(deletingTransitions) {
@@ -69,19 +85,26 @@ var fsm = function(){
 		var ids = parent.getAttribute("ids").split(" ");
 
 		var numForwardArrows = 0;
+		var labelTexts = [];
+		var thisID = this.getAttribute("transid");
 		for(var i = 0; i < numSiblings + 1; i++) {
 		    var sib = parent.childNodes[i*2 + 1];
-		    if(sib.getAttribute("sourceid") == ids[0]) 
-			numForwardArrows++;
+		    var sibID = sib.getAttribute("transid");
+		    var tmplabel = document.querySelector("text[labelid = '" + sibID + "']");
+		    tmplabel.parentNode.removeChild(tmplabel);		    
+		    if(sibID != thisID)	{
+			if(sib.getAttribute("sourceid") == ids[0]) 
+			    numForwardArrows++;
+			labelTexts.push(tmplabel.textContent);
+		    }
 		}
-		if(this.getAttribute("sourceid") == ids[0]) 
-		    numForwardArrows--;
 
 		var twoStates = [document.querySelector("circle[stateid='"+ids[0]+"']"),document.querySelector("circle[stateid='"+ids[1]+"']")];
 		parent.innerHTML = "";
 		for(var i = 0; i < numSiblings; i++) {
-		    //NOTE: If/when I eventually implement labels for transitions, they need to be carried over here
-		    var t = i < numForwardArrows ? makeTransition(twoStates[0],twoStates[1]) : makeTransition(twoStates[1],twoStates[0]);
+		    var t = i < numForwardArrows ? 
+			makeTransition(twoStates[0],twoStates[1],labelTexts[i]):
+			makeTransition(twoStates[1],twoStates[0],labelTexts[i]);
 		    t[0].setAttribute("stroke","red");
 		    t[0].setAttribute("stroke-width","8px");
 		    t[1].setAttribute("fill","red");
@@ -99,7 +122,7 @@ var fsm = function(){
 	newCirc.setAttribute("cx", x);
 	newCirc.setAttribute("cy", y);
 	newCirc.setAttribute("r", stateRad);
-	newCirc.setAttribute("stateid", totalNumStates);
+	newCirc.setAttribute("stateid", totalNumStates++);
 	newCirc.setAttribute("fill","white");
 	newCirc.setAttribute("stroke","black");
 	states.appendChild(newCirc);
@@ -120,14 +143,21 @@ var fsm = function(){
 		for(var i = transitions.childNodes.length - 1; i >= 0; i--) {
 		    var ids = transitions.childNodes[i].getAttribute("ids").split(" ");
 		    if(ids[0] === "" + this.getAttribute("stateid") ||
-		      ids[1] === "" + this.getAttribute("stateid"))
-			transitions.removeChild(transitions.childNodes[i]);
+		      ids[1] === "" + this.getAttribute("stateid")) {
+			var trans = transitions.childNodes[i];
+			for(var j = 0; j < trans.childNodes.length/2; j++) {
+			    var tempID = trans.childNodes[j*2+1].getAttribute("transid");
+			    console.log(trans);
+			    console.log(tempID);
+			    console.log(document.querySelector("text[labelid='"+tempID+"']"));
+			    tLabels.removeChild(document.querySelector("text[labelid='"+tempID+"']")); 
+			}
+			transitions.removeChild(trans);
+		    }
 		}
 		this.parentNode.removeChild(this);
 	    }
 	});	    
-	
-	totalNumStates++;
 
 	return newCirc;
     };
