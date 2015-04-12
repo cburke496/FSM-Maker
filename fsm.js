@@ -22,6 +22,8 @@ var fsm = function(){
     var totalNumStates = 0;
     var totalNumTransitions = 0;
 
+    var selectedLabel = null;
+
     //Returns a list. The first element is the "path" of the transition and the
     //second element is the "polygon" of the arrow
     var makeTransition = function(c1, c2, labelText) {
@@ -65,6 +67,7 @@ var fsm = function(){
 	tgroup.appendChild(arrow);
 	tgroup.appendChild(newT);
 
+	if(selectedLabel) deselectLabel();
 	var label = document.createElementNS("http://www.w3.org/2000/svg","text");
 	var labelDist = 8;
 	var labelX = arrowX + (labelDist * Math.sin(theta));
@@ -72,10 +75,12 @@ var fsm = function(){
 	label.setAttribute("x", labelX);
 	label.setAttribute("y", labelY);
 	label.setAttribute("font-size","15px");
+	label.setAttribute("stroke","#00ccff");
 	label.setAttribute("text-anchor","middle");
 	label.setAttribute("labelid",newT.getAttribute("transid"));
 	var temp = (labelText === undefined ? String.fromCharCode(949) : labelText);
 	label.appendChild(document.createTextNode(temp));
+	selectedLabel = label;
 	tLabels.appendChild(label);
 	
 	newT.addEventListener("mouseup",function() {
@@ -111,6 +116,7 @@ var fsm = function(){
 		    t[1].setAttribute("stroke","red");
 		    t[1].setAttribute("stroke-width","8px");
 		} 
+		if(selectedLabel) deselectLabel();
 	    }
 	});
 	
@@ -130,12 +136,12 @@ var fsm = function(){
 	newCirc.addEventListener("mouseup",function() {
 	    if(drawingTransitions) {
 		if(selectedState === this) {
-		    deselect(this);
+		    deselectState();
 		} else if(selectedState === null) {
-		    select(this);
+		    selectState(this);
 		} else {
 		    makeTransition(selectedState, this);
-		    deselect(selectedState);
+		    deselectState();
 		}
 	    }
 	    
@@ -146,11 +152,7 @@ var fsm = function(){
 		      ids[1] === "" + this.getAttribute("stateid")) {
 			var trans = transitions.childNodes[i];
 			for(var j = 0; j < trans.childNodes.length/2; j++) {
-			    var tempID = trans.childNodes[j*2+1].getAttribute("transid");
-			    console.log(trans);
-			    console.log(tempID);
-			    console.log(document.querySelector("text[labelid='"+tempID+"']"));
-			    tLabels.removeChild(document.querySelector("text[labelid='"+tempID+"']")); 
+			    var tempID = trans.childNodes[j*2+1].getAttribute("transid");			    tLabels.removeChild(document.querySelector("text[labelid='"+tempID+"']")); 
 			}
 			transitions.removeChild(trans);
 		    }
@@ -231,16 +233,24 @@ var fsm = function(){
 	}
     }
     
-    var select = function(state) {
+    var selectState = function(state) {
+	if(selectedLabel) deselectLabel();
 	state.setAttribute("stroke","#00ccff");
 	state.setAttribute("stroke-width","2px");
 	selectedState = state;
     }
     
-    var deselect = function(state) {
-	state.setAttribute("stroke","black");
-	state.setAttribute("stroke-width","1px");
+    var deselectState = function() {
+	selectedState.setAttribute("stroke","black");
+	selectedState.setAttribute("stroke-width","1px");
 	selectedState = null;
+    }
+    
+    var deselectLabel = function() {
+	if(selectedLabel.textContent === "")
+	    selectedLabel.textContent = String.fromCharCode(949);
+	selectedLabel.setAttribute("stroke","black");
+	selectedLabel = null;
     }
     
     var toggleOffAllButtons = function() {
@@ -249,7 +259,9 @@ var fsm = function(){
 	
 	tButton.className = "";
 	drawingTransitions = false;
-	if(selectedState) deselect(selectedState);
+	if(selectedState) deselectState();
+
+	if(selectedLabel) deselectLabel();
     
 	dsButton.className = "";
 	deletingStates = false;
@@ -274,10 +286,35 @@ var fsm = function(){
 	}
     }
     
+    var setupKeyboardListener = function() {
+	window.onkeydown = function(e) {
+	    if(e.keyCode == 8) {
+		e.preventDefault();
+		if(selectedLabel.textContent != String.fromCharCode(949)) {
+		    var text = selectedLabel.textContent;
+		    selectedLabel.textContent = text.substring(0,text.length-1);
+		}
+	    }
+	}
+	window.onkeypress = function(e) {
+	    if(selectedLabel == null || e.charCode == 32)
+		return;
+	    if(e.charCode == 13) {
+		deselectLabel();
+		return;
+	    }
+	    if(selectedLabel.textContent === String.fromCharCode(949))
+		selectedLabel.textContent = String.fromCharCode(e.charCode);
+	    else
+		selectedLabel.textContent += String.fromCharCode(e.charCode);
+	}
+    }
+
     return function(){
 	setupNSButton();
 	setupNTButton();
 	setupDSButton();
 	setupDTButton();
+	setupKeyboardListener();
     }
 }()()
