@@ -1,0 +1,36 @@
+Design Overview:
+<svg>: Referred to in the code as "svg"
+   -<g>: This is the group referred to in the code as "transitions"
+    It has no attributes
+      -Multiple <g>s: Each element has an "ids" attribute which is a string 
+       containing the "stateids" of the two states connected by the transitions 
+       in this group, in ascending order, separated by a space. The children of
+       these elements come in pairs of:
+         1.<polygon>: This is the arrow of the transition. It's black by
+	  default, but turns red when "Delete Transitions" is selected. It has
+	  no stroke. It stores no identifying information.
+	 2.<path>: This is the curve of the transition. It's also black by
+	  default and turns red when "Delete Transitions" is selected. It
+	  carries with it two ids: "transid" matches the "labelid" of the 
+	  corresponding label and is used to identify the transition as a whole 
+	  (and thus is unique), while "sourceid" is the "stateid" of the source 
+	  of this transition, i.e. the state that the arrow is pointing away 
+	  from (this is important because neither group nor the arrow keep track
+  	  of which way the transition is pointing). It has a "mouseup" event
+	  listener attatched to it specifying how it can be deleted.
+   -<g>: This is the group referred to in the code as "states"
+      -Multiple <circle>s: These are the states of the machine. They have a
+       black outline by default, but it turns blue when selected and red when
+       "Delete States" is selected. Each element has a "mouseup" event listener
+       attatched to it defining how transitions can be drawn between states and
+       how states can be deleted
+   -<g>: This is the group referred to in the code as "labels"
+      -Mutiple <text>s: These are the labels of the machine. Their "textContent"
+       variable is the displayed text of the label, which cannot contain
+       whitespace. The text is an epsilon by default but can be overwritten.
+       Attempting to make a transition without a label will result in an 
+       epsilon transition. The text is black by default but blue when selected 
+       for editing. Each element contains a unique "labelid" that matches the
+       "transid" of the transition it belongs to.
+Outside the SVG are the buttons. Only one of these buttons may be selected at a time. They control what action the user can take when he/she clicks inside the SVG. Anytime a button is pressed on or off, "toggleOffAllButtons" should be called right away to ensure that the SVG is returned to a default state.
+The window itself has keyboard events defining how labels can be typed up.
