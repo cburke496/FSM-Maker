@@ -1,31 +1,44 @@
 var fsm = function(){
-    var stateRad = 20;
-    var transWidth = "3px";
-    var stateWidth = "1px";
+    //***Constants***//
+    var stateRad = 20;//radius of each state
+    var transWidth = "3px";//stroke-width of each transition path
+    var stateWidth = "1px";//stroke-width of each state
 
+    //****HTML Elements****//
     var svg = document.querySelector("svg");
     var body = document.querySelector("body");
+    //Draw New States Button
     var sButton = document.querySelector("#newStates");
+    //Draw New Transitions Button
     var tButton = document.querySelector("#newTransitions");
+    //Delete States Button
     var dsButton = document.querySelector("#deleteStates");
+    //Delete Transitions Button
     var dtButton = document.querySelector("#deleteTransitions");
+    //Group of Transitions
     var transitions = svg.appendChild(document.createElementNS("http://www.w3.org/2000/svg","g"));
+    //Group of States
     var states = svg.appendChild(document.createElementNS("http://www.w3.org/2000/svg","g"));
+    //Group of Labels
     var tLabels = svg.appendChild(document.createElementNS("http://www.w3.org/2000/svg","g"));
 
-    var selectedState = null;
-    var drawingStates = false;
-    var drawingTransitions = false;
-    var deletingStates = false;
-    var deletingTransitions = false;
+    //****Variables About State of SVG****//
+    var selectedState = null;//currently selected state
+    var selectedLabel = null;//currently selected label
+    var drawingStates = false;//whether Make New States is active
+    var drawingTransitions = false;//whether Make New Transitions is active
+    var deletingStates = false;//whether Delete States is active
+    var deletingTransitions = false;//whether Delete Transitions is active
 
+    //****Counters (Not Decremented By Deletions)****//
     var totalNumStates = 0;
     var totalNumTransitions = 0;
 
-    var selectedLabel = null;
 
-    //Returns a list. The first element is the "path" of the transition and the
-    //second element is the "polygon" of the arrow
+    //Makes a new transition between states "c1" and "c2" with label "labeltext"
+    //
+    //Returns [a,b], where "a" is the "path" of the transition and the "b" is 
+    //the "polygon" of the arrow
     var makeTransition = function(c1, c2, labelText) {
 	var newT = document.createElementNS("http://www.w3.org/2000/svg","path");
 	var id1 = c1.getAttribute("stateid");
@@ -123,6 +136,9 @@ var fsm = function(){
 	return [newT,arrow];
     };
     
+    //Makes a new state with coordinates (x,y)
+    //
+    //Returns the "circle" element of the newly-created state
     var makeState = function(x, y) {
 	var newCirc = document.createElementNS("http://www.w3.org/2000/svg","circle");
 	newCirc.setAttribute("cx", x);
@@ -164,6 +180,7 @@ var fsm = function(){
 	return newCirc;
     };
     
+    //Sets up the event listeners for the Make New States Button
     var setupNSButton = function() {
 	svg.onclick = function(e) {
 	    if(drawingStates)
@@ -181,6 +198,7 @@ var fsm = function(){
 	} 
     }
     
+    //Sets up the event listeners for the Make New Transitions Button
     var setupNTButton = function() {
 	tButton.onclick = function() {
 	    var drawing = drawingTransitions;
@@ -193,6 +211,7 @@ var fsm = function(){
 	}
     }
 
+    //Sets up the event listeners for the Delete States Button
     var setupDSButton = function() {
 	dsButton.onclick = function() {
 	    var deleting = deletingStates;
@@ -210,6 +229,7 @@ var fsm = function(){
 	}
     }
 
+    //Sets up the event listeners for the Delete Transitions Button
     var setupDTButton = function() {
 	dtButton.onclick = function() {
 	    var deleting = deletingTransitions;
@@ -233,6 +253,7 @@ var fsm = function(){
 	}
     }
     
+    //Selects "state"
     var selectState = function(state) {
 	if(selectedLabel) deselectLabel();
 	state.setAttribute("stroke","#00ccff");
@@ -240,12 +261,14 @@ var fsm = function(){
 	selectedState = state;
     }
     
+    //Deselects the currently selected state
     var deselectState = function() {
 	selectedState.setAttribute("stroke","black");
 	selectedState.setAttribute("stroke-width","1px");
 	selectedState = null;
     }
     
+    //Deselects the currently selected label
     var deselectLabel = function() {
 	if(selectedLabel.textContent === "")
 	    selectedLabel.textContent = String.fromCharCode(949);
@@ -253,6 +276,7 @@ var fsm = function(){
 	selectedLabel = null;
     }
     
+    //Deselects all buttons, returning the svg to a default state
     var toggleOffAllButtons = function() {
 	sButton.className = "";
 	drawingStates = false;
@@ -285,8 +309,9 @@ var fsm = function(){
 	    allArrows[i].setAttribute("stroke-width","0px");
 	}
     }
-    
-    var setupKeyboardListener = function() {
+
+    //Sets up event listeners for typing labels
+    var setupKeyboardListeners = function() {
 	window.onkeydown = function(e) {
 	    if(e.keyCode == 8) {
 		e.preventDefault();
@@ -310,11 +335,12 @@ var fsm = function(){
 	}
     }
 
+    //Runs all the setup functions
     return function(){
 	setupNSButton();
 	setupNTButton();
 	setupDSButton();
 	setupDTButton();
-	setupKeyboardListener();
+	setupKeyboardListeners();
     }
 }()()
