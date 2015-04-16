@@ -1,6 +1,8 @@
 var fsm = function(){
-    //***Constants***//
-    var stateRad = 20;//radius of each state
+    //***(Sort of) Constants***//
+    var stateRad = 20;//radius of each state (can be changed)
+    var maxStateRad = 100;//maximum radius of each state
+    var minStateRad = 5;//minimum radius of each state
     var transWidth = "3px";//stroke-width of each transition path
     var stateWidth = "1px";//stroke-width of each state
 
@@ -21,6 +23,8 @@ var fsm = function(){
     var states = svg.appendChild(document.createElementNS("http://www.w3.org/2000/svg","g"));
     //Group of Labels
     var tLabels = svg.appendChild(document.createElementNS("http://www.w3.org/2000/svg","g"));
+    //State Radius Input
+    var stateRadBox = document.querySelector("#state-rad");
 
     //****Variables About State of SVG****//
     var selectedState = null;//currently selected state
@@ -310,10 +314,29 @@ var fsm = function(){
 	}
     }
 
+    //Set the state radius to the given value if give a valid value. Correct it
+    //if not.
+    var updateStateRad = function() {
+	var newStateRad = stateRadBox.value;
+	if(isNaN(newStateRad)) {
+	    stateRadBox.value = stateRad;
+	    return;
+	}
+	newStateRad = parseInt(newStateRad);
+	if(newStateRad > maxStateRad)
+	    newStateRad = maxStateRad;
+	if(newStateRad < minStateRad)
+	    newStateRad = minStateRad;
+	stateRad = newStateRad;
+	stateRadBox.value = stateRad;
+	for(var i = 0; i < states.childNodes.length; i++)
+	    states.childNodes[i].setAttribute("r",stateRad);
+    }
+    
     //Sets up event listeners for typing labels
     var setupKeyboardListeners = function() {
 	window.onkeydown = function(e) {
-	    if(e.keyCode == 8) {
+	    if(e.keyCode == 8 && e.srcElement == body && selectedLabel) {
 		e.preventDefault();
 		if(selectedLabel.textContent != String.fromCharCode(949)) {
 		    var text = selectedLabel.textContent;
@@ -322,6 +345,11 @@ var fsm = function(){
 	    }
 	}
 	window.onkeypress = function(e) {
+	    if(!selectedLabel || e.srcElement != body) {
+		if(e.charCode == 13)
+		    updateStateRad();
+		return;
+	    }
 	    if(selectedLabel == null || e.charCode == 32)
 		return;
 	    if(e.charCode == 13) {
