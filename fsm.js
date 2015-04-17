@@ -1,6 +1,7 @@
 var fsm = function(){
     //***(Sort of) Constants***//
     var stateRad = 20;//radius of each state (can be changed)
+    var stateColor = "FFFFFF";//color of each state (can be changeD)
     var maxStateRad = 100;//maximum radius of each state
     var minStateRad = 5;//minimum radius of each state
     var transWidth = "3px";//stroke-width of each transition path
@@ -25,6 +26,8 @@ var fsm = function(){
     var tLabels = svg.appendChild(document.createElementNS("http://www.w3.org/2000/svg","g"));
     //State Radius Input
     var stateRadBox = document.querySelector("#state-rad");
+    //State Color Input
+    var stateColorBox = document.querySelector("#state-color");
 
     //****Variables About State of SVG****//
     var selectedState = null;//currently selected state
@@ -332,6 +335,28 @@ var fsm = function(){
 	for(var i = 0; i < states.childNodes.length; i++)
 	    states.childNodes[i].setAttribute("r",stateRad);
     }
+
+    //Set the state color to the given value if given a valid value. Correct it
+    //if not.
+    var updateStateColor = function() {
+	var newStateColor = stateColorBox.value;
+	var valid = true;
+	if(newStateColor.length == 6) {
+	    for(var i = 0; i < 6; i++) {
+		if("0123456789ABCDEFabcdef".indexOf(newStateColor[i]) == -1) {
+		    valid = false;
+		    break;
+		}
+	    }
+	    if(valid) {
+		stateColor = newStateColor.toUpperCase();
+		for(var i = 0; i < states.childNodes.length; i++) {
+		    states.childNodes[i].setAttribute("fill","#"+stateColor);
+		}
+	    }
+	}
+	stateColorBox.value = stateColor;
+    }
     
     //Sets up event listeners for typing labels
     var setupKeyboardListeners = function() {
@@ -346,8 +371,12 @@ var fsm = function(){
 	}
 	window.onkeypress = function(e) {
 	    if(!selectedLabel || e.srcElement != body) {
-		if(e.charCode == 13)
-		    updateStateRad();
+		if(e.charCode == 13) {
+		    if(e.srcElement == stateRadBox)
+			updateStateRad();
+		    if(e.srcElement == stateColorBox)
+			updateStateColor();
+		}
 		return;
 	    }
 	    if(selectedLabel == null || e.charCode == 32)
