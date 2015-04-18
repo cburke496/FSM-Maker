@@ -154,7 +154,7 @@ var fsm = function(){
 	newCirc.setAttribute("cy", y);
 	newCirc.setAttribute("r", stateRad);
 	newCirc.setAttribute("stateid", totalNumStates++);
-	newCirc.setAttribute("fill","white");
+	newCirc.setAttribute("fill","#"+stateColor);
 	newCirc.setAttribute("stroke","black");
 	states.appendChild(newCirc);
 	
@@ -374,20 +374,18 @@ var fsm = function(){
 		    selectedLabel.textContent = text.substring(0,text.length-1);
 		}
 	    }
+	    if(e.srcElement == stateRadBox)
+		radiusChanged = true;
+	    if(e.srcElement == stateColorBox)
+		colorChanged = true;
 	}
 	window.onkeypress = function(e) {
 	    if(!selectedLabel || e.srcElement != body) {
-		if(e.srcElement == stateRadBox) {
-		    radiusChanged = true;
-		    if(e.charCode == 13) {
+		if(e.charCode == 13) {		
+		    if(e.srcElement == stateRadBox)
 			updateStateRad();
-		    }
-		}
-		if(e.srcElement == stateColorBox) {
-		    colorChanged = true;
-		    if(e.charCode == 13) {
+		    if(e.srcElement == stateColorBox)
 			updateStateColor();
-		    }
 		}
 		return;
 	    }
