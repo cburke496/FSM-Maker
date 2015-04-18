@@ -36,6 +36,8 @@ var fsm = function(){
     var drawingTransitions = false;//whether Make New Transitions is active
     var deletingStates = false;//whether Delete States is active
     var deletingTransitions = false;//whether Delete Transitions is active
+    var radiusChanged = false//whether the state radius input has changed since the value was last updated
+    var colorChanged = false//whether the state color input has changed since the value was last updated
 
     //****Counters (Not Decremented By Deletions)****//
     var totalNumStates = 0;
@@ -320,6 +322,8 @@ var fsm = function(){
     //Set the state radius to the given value if give a valid value. Correct it
     //if not.
     var updateStateRad = function() {
+	radiusChanged = false;
+
 	var newStateRad = stateRadBox.value;
 	if(isNaN(newStateRad)) {
 	    stateRadBox.value = stateRad;
@@ -339,6 +343,8 @@ var fsm = function(){
     //Set the state color to the given value if given a valid value. Correct it
     //if not.
     var updateStateColor = function() {
+	colorChanged = false;
+
 	var newStateColor = stateColorBox.value;
 	var valid = true;
 	if(newStateColor.length == 6) {
@@ -358,7 +364,7 @@ var fsm = function(){
 	stateColorBox.value = stateColor;
     }
     
-    //Sets up event listeners for typing labels
+    //Sets up event listeners for typing labels and typing in input boxes
     var setupKeyboardListeners = function() {
 	window.onkeydown = function(e) {
 	    if(e.keyCode == 8 && e.srcElement == body && selectedLabel) {
@@ -371,11 +377,17 @@ var fsm = function(){
 	}
 	window.onkeypress = function(e) {
 	    if(!selectedLabel || e.srcElement != body) {
-		if(e.charCode == 13) {
-		    if(e.srcElement == stateRadBox)
+		if(e.srcElement == stateRadBox) {
+		    radiusChanged = true;
+		    if(e.charCode == 13) {
 			updateStateRad();
-		    if(e.srcElement == stateColorBox)
+		    }
+		}
+		if(e.srcElement == stateColorBox) {
+		    colorChanged = true;
+		    if(e.charCode == 13) {
 			updateStateColor();
+		    }
 		}
 		return;
 	    }
@@ -392,6 +404,16 @@ var fsm = function(){
 	}
     }
 
+    //Sets up mouse listener for when user clicks outside of input box
+    var setupMouseListener = function() {
+	window.onclick = function(e) {
+	    if(e.srcElement != stateRadBox && radiusChanged)
+		updateStateRad();
+	    if(e.srcElement != stateColorBox && colorChanged)
+		updateStateColor();
+	}
+    }
+
     //Runs all the setup functions
     return function(){
 	setupNSButton();
@@ -399,5 +421,6 @@ var fsm = function(){
 	setupDSButton();
 	setupDTButton();
 	setupKeyboardListeners();
+	setupMouseListener();
     }
 }()()
