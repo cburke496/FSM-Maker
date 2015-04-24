@@ -1,9 +1,10 @@
 var fsm = function(){
     //***(Sort of) Constants***//
     var stateRad = 20;//radius of each state (can be changed)
-    var stateColor = "FFFFFF";//color of each state (can be changeD)
+    var stateColor = "FFFFFF";//color of each state (can be changed)
+    var acceptingRatio = 5/6;//ratio of radii of two circles in accepting state
     var maxStateRad = 100;//maximum radius of each state
-    var minStateRad = 5;//minimum radius of each state
+    var minStateRad = 10;//minimum radius of each state
     var transWidth = "3px";//stroke-width of each transition path
     var stateWidth = "1px";//stroke-width of each state
 
@@ -18,10 +19,14 @@ var fsm = function(){
     var dsButton = document.querySelector("#deleteStates");
     //Delete Transitions Button
     var dtButton = document.querySelector("#deleteTransitions");
+    //Toggle Accepting Button
+    var taButton = document.querySelector("#toggleAccepting");
     //Group of Transitions
     var transitions = svg.appendChild(document.createElementNS("http://www.w3.org/2000/svg","g"));
     //Group of States
     var states = svg.appendChild(document.createElementNS("http://www.w3.org/2000/svg","g"));
+    //Group of Inner Circles for Accepting States
+    var acceptingStates = svg.appendChild(document.createElementNS("http://www.w3.org/2000/svg","g"));
     //Group of Labels
     var tLabels = svg.appendChild(document.createElementNS("http://www.w3.org/2000/svg","g"));
     //State Radius Input
@@ -36,6 +41,7 @@ var fsm = function(){
     var drawingTransitions = false;//whether Make New Transitions is active
     var deletingStates = false;//whether Delete States is active
     var deletingTransitions = false;//whether Delete Transitions is active
+    var togglingAccepting = false;//whether Toggle Accepting is active
     var radiusChanged = false//whether the state radius input has changed since the value was last updated
     var colorChanged = false//whether the state color input has changed since the value was last updated
 
@@ -182,7 +188,35 @@ var fsm = function(){
 			transitions.removeChild(trans);
 		    }
 		}
+		for(var i = 0; i < acceptingStates.childNodes.length; i++) {
+		    if(acceptingStates.childNodes[i].getAttribute("stateid") == this.getAttribute("stateid")) {
+			acceptingStates.removeChild(acceptingStates.childNodes[i]);
+			break;
+		    }
+		}
 		this.parentNode.removeChild(this);
+	    }
+
+	    if(togglingAccepting) {
+		var existingAcceptingState = null;
+		for(var i = 0; i < acceptingStates.childNodes.length;i++) {
+		    if(acceptingStates.childNodes[i].getAttribute("stateid") == this.getAttribute("stateid")) {
+			existingAcceptingState = acceptingStates.childNodes[i];
+			break;
+		    }
+		}
+		if(existingAcceptingState) {
+		    acceptingStates.removeChild(existingAcceptingState);
+		} else {
+		    var newAcceptingState = document.createElementNS("http://www.w3.org/2000/svg","circle");
+		    newAcceptingState.setAttribute("cx",this.getAttribute("cx"));
+		    newAcceptingState.setAttribute("cy",this.getAttribute("cy"));
+		    newAcceptingState.setAttribute("r",this.getAttribute("r") * acceptingRatio);
+		    newAcceptingState.setAttribute("stateid",this.getAttribute("stateid"));
+		    newAcceptingState.setAttribute("fill","none");
+		    newAcceptingState.setAttribute("stroke","black");
+		    acceptingStates.appendChild(newAcceptingState);
+		}
 	    }
 	});	    
 
@@ -261,6 +295,19 @@ var fsm = function(){
 	    }
 	}
     }
+
+    //Sets up the event listeners for the Toggle Accepting Button
+    var setupTAButton = function() {
+	taButton.onclick = function() {
+	    var toggling = togglingAccepting;
+	    toggleOffAllButtons();
+
+	    if(!toggling) {
+		togglingAccepting = true;
+		this.className = "toggledOn";
+	    }
+	}
+    }
     
     //Selects "state"
     var selectState = function(state) {
@@ -317,6 +364,9 @@ var fsm = function(){
 	    allArrows[i].setAttribute("fill","black");
 	    allArrows[i].setAttribute("stroke-width","0px");
 	}
+
+	taButton.className = "";
+	togglingAccepting = false;
     }
 
     //Set the state radius to the given value if give a valid value. Correct it
@@ -338,6 +388,8 @@ var fsm = function(){
 	stateRadBox.value = stateRad;
 	for(var i = 0; i < states.childNodes.length; i++)
 	    states.childNodes[i].setAttribute("r",stateRad);
+	for(var i = 0; i < acceptingStates.childNodes.length; i++)
+	    acceptingStates.childNodes[i].setAttribute("r",stateRad * acceptingRatio);
     }
 
     //Set the state color to the given value if given a valid value. Correct it
@@ -418,6 +470,7 @@ var fsm = function(){
 	setupNTButton();
 	setupDSButton();
 	setupDTButton();
+	setupTAButton();
 	setupKeyboardListeners();
 	setupMouseListener();
     }
