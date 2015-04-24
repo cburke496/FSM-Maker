@@ -23,7 +23,14 @@ Design Overview:
        black outline by default, but it turns blue when selected and red when
        "Delete States" is selected. Each element has a "mouseup" event listener
        attatched to it defining how transitions can be drawn between states and
-       how states can be deleted
+       how states can be deleted. Each element has a unique "stateid".
+   -<g>: This is the group referred to in the code as "acceptingStates"
+      -Multiple <circle>s: These are the inner circles of all of the accepting
+       states of the machine. They have a black outline by default, but it turns
+       red when "Delete States" is selected (it currently doesn't change when
+       selected). It has no fill. Each has a "stateid" that matched that of the
+       state it's paired with. These elements have no event listeners;
+       everything is handled in the event listeners of the regular states.
    -<g>: This is the group referred to in the code as "labels"
       -Mutiple <text>s: These are the labels of the machine. Their "textContent"
        variable is the displayed text of the label, which cannot contain
@@ -33,4 +40,5 @@ Design Overview:
        for editing. Each element contains a unique "labelid" that matches the
        "transid" of the transition it belongs to.
 Outside the SVG are the buttons. Only one of these buttons may be selected at a time. They control what action the user can take when he/she clicks inside the SVG. Anytime a button is pressed on or off, "toggleOffAllButtons" should be called right away to ensure that the SVG is returned to a default state.
+Beneath the buttons are two inputs, one for changing the radius of the states and one for changing their fill color.
 The window itself has keyboard events defining how labels can be typed up.
