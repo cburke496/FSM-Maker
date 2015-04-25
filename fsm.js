@@ -189,7 +189,7 @@ var fsm = function(){
 		    }
 		}
 		for(var i = 0; i < acceptingStates.childNodes.length; i++) {
-		    if(acceptingStates.childNodes[i].getAttribute("stateid") == this.getAttribute("stateid")) {
+		    if(acceptingStates.childNodes[i].getAttribute("innerstateid") == this.getAttribute("stateid")) {
 			acceptingStates.removeChild(acceptingStates.childNodes[i]);
 			break;
 		    }
@@ -200,7 +200,7 @@ var fsm = function(){
 	    if(togglingAccepting) {
 		var existingAcceptingState = null;
 		for(var i = 0; i < acceptingStates.childNodes.length;i++) {
-		    if(acceptingStates.childNodes[i].getAttribute("stateid") == this.getAttribute("stateid")) {
+		    if(acceptingStates.childNodes[i].getAttribute("innerstateid") == this.getAttribute("stateid")) {
 			existingAcceptingState = acceptingStates.childNodes[i];
 			break;
 		    }
@@ -212,7 +212,7 @@ var fsm = function(){
 		    newAcceptingState.setAttribute("cx",this.getAttribute("cx"));
 		    newAcceptingState.setAttribute("cy",this.getAttribute("cy"));
 		    newAcceptingState.setAttribute("r",this.getAttribute("r") * acceptingRatio);
-		    newAcceptingState.setAttribute("stateid",this.getAttribute("stateid"));
+		    newAcceptingState.setAttribute("innerstateid",this.getAttribute("stateid"));
 		    newAcceptingState.setAttribute("fill","none");
 		    newAcceptingState.setAttribute("stroke","black");
 		    acceptingStates.appendChild(newAcceptingState);
@@ -263,7 +263,7 @@ var fsm = function(){
 	    if(!deleting) {
 		deletingStates = true;
 		this.className = "toggledOn";
-		var allStates = document.getElementsByTagName("circle");
+		var allStates = states.childNodes;
 		for(var i = 0; i < allStates.length; i++) {
 		    allStates[i].setAttribute("stroke","red");
 		    allStates[i].setAttribute("stroke-width","3px");

@@ -26,11 +26,11 @@ Design Overview:
        how states can be deleted. Each element has a unique "stateid".
    -<g>: This is the group referred to in the code as "acceptingStates"
       -Multiple <circle>s: These are the inner circles of all of the accepting
-       states of the machine. They have a black outline by default, but it turns
-       red when "Delete States" is selected (it currently doesn't change when
-       selected). It has no fill. Each has a "stateid" that matched that of the
-       state it's paired with. These elements have no event listeners;
-       everything is handled in the event listeners of the regular states.
+       states of the machine. They have a black outline that never changes 
+       color. It has no fill. Each has an "innerstateid" that matches the
+       "stateid" of the state it's paired with. These elements have no event 
+       listeners; everything is handled in the event listeners of the regular 
+       states.
    -<g>: This is the group referred to in the code as "labels"
       -Mutiple <text>s: These are the labels of the machine. Their "textContent"
        variable is the displayed text of the label, which cannot contain
