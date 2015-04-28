@@ -1,13 +1,4 @@
 var fsm = function(){
-    //***(Sort of) Constants***//
-    var stateRad = 20;//radius of each state (can be changed)
-    var stateColor = "FFFFFF";//color of each state (can be changed)
-    var acceptingRatio = 5/6;//ratio of radii of two circles in accepting state
-    var maxStateRad = 100;//maximum radius of each state
-    var minStateRad = 10;//minimum radius of each state
-    var transWidth = "3px";//stroke-width of each transition path
-    var stateWidth = "1px";//stroke-width of each state
-
     //****HTML Elements****//
     var svg = document.querySelector("svg");
     var body = document.querySelector("body");
@@ -33,6 +24,18 @@ var fsm = function(){
     var stateRadBox = document.querySelector("#state-rad");
     //State Color Input
     var stateColorBox = document.querySelector("#state-color");
+    
+    //***(Sort of) Constants***//
+    var stateRad = 20;//radius of each state (can be changed)
+    var stateColor = "FFFFFF";//color of each state (can be changed)
+    var acceptingRatio = 5/6;//ratio of radii of two circles in accepting state
+    var maxStateRad = 100;//maximum radius of each state
+    var minStateRad = 10;//minimum radius of each state
+    var transWidth = "2px";//stroke-width of each transition path
+    var stateWidth = "1px";//stroke-width of each state
+    var labelDist = 8;//distance between labels and transitions
+    var svgWidth = svg.getAttribute("width");//width of the svg
+    var svgHeight = svg.getAttribute("height");//height of the svg
 
     //****Variables About State of SVG****//
     var selectedState = null;//currently selected state
@@ -52,27 +55,51 @@ var fsm = function(){
 
     //Makes a new transition between states "c1" and "c2" with label "labeltext"
     //
-    //Returns [a,b], where "a" is the "path" of the transition and the "b" is 
-    //the "polygon" of the arrow
+    //Returns [a,b], where "a" is the "path" of the transition and "b" is the 
+    //"polygon" of the arrow
     var makeTransition = function(c1, c2, labelText) {
-	var newT = document.createElementNS("http://www.w3.org/2000/svg","path");
 	var id1 = c1.getAttribute("stateid");
 	var id2 = c2.getAttribute("stateid");
 	var x1 = parseInt(c1.getAttribute("cx"));
 	var x2 = parseInt(c2.getAttribute("cx"));
 	var y1 = parseInt(c1.getAttribute("cy"));
 	var y2 = parseInt(c2.getAttribute("cy"));
-	var theta = Math.atan((y2 - y1)/(x2 - x1));
 	var tgroup = document.querySelector("g[ids='"+Math.min(id1,id2)+" "+Math.max(id1,id2)+"']");
 	if(tgroup == null) {
 	    tgroup = transitions.appendChild(document.createElementNS("http://www.w3.org/2000/svg","g"));
 	    tgroup.setAttribute("ids",Math.min(id1,id2)+" "+Math.max(id1,id2));
 	}
 	var n = tgroup.childNodes.length/2;
-	var controlDist = Math.floor((n+1)/2)*40*Math.pow(-1,n);
-	var dx = controlDist * Math.sin(theta);
-	var dy = -1 * controlDist * Math.cos(theta);
-	newT.setAttribute("d", "M"+x1+" "+y1+" C"+(x1 + dx)+" "+(y1 + dy)+" "+(x2 + dx)+" "+(y2 + dy)+" "+x2+" "+y2);
+
+	if(c1 != c2) {
+	    var newT = document.createElementNS("http://www.w3.org/2000/svg","path");
+	    var theta = Math.atan((y2 - y1)/(x2 - x1));
+	    var controlDist = Math.floor((n+1)/2)*40*Math.pow(-1,n);
+	    var dx = controlDist * Math.sin(theta);
+	    var dy = -1 * controlDist * Math.cos(theta);
+	    newT.setAttribute("d", "M"+x1+" "+y1+" C"+(x1 + dx)+" "+(y1 + dy)+" "+(x2 + dx)+" "+(y2 + dy)+" "+x2+" "+y2);
+
+	    var arrowX = (x1 + x2)/2 + (controlDist*3/4 * Math.sin(theta));
+	    var arrowY = (y1 + y2)/2 - (controlDist*3/4 * Math.cos(theta));
+	    var newTheta = theta * 180 / Math.PI;
+	    newTheta = x1 < x2 ? newTheta : newTheta + 180
+
+	    var labelX = arrowX + (labelDist * Math.sin(theta));
+	    var labelY = arrowY - (labelDist * Math.cos(theta));
+	} else {
+	    var newT = document.createElementNS("http://www.w3.org/2000/svg","circle");
+	    var transRad = 10 * (n+1);
+	    newT.setAttribute("r",transRad);
+	    var xmult = x1 < svgWidth/2 ? -1 : 1;
+	    var ymult = y1 < svgHeight/2 ? -1 : 1;
+	    newT.setAttribute("cx",x1 + xmult*(stateRad+transRad)/Math.sqrt(2));
+	    newT.setAttribute("cy",y1 + ymult*(stateRad+transRad)/Math.sqrt(2));
+	    var arrowX = x1 + xmult*(stateRad+2*transRad)/Math.sqrt(2);
+	    var arrowY = y1 + ymult*(stateRad+2*transRad)/Math.sqrt(2);
+	    var newTheta = Math.atan(ymult/xmult) * 180 / Math.PI + 90;
+	    var labelX = arrowX + 3/2*xmult*labelDist/Math.sqrt(2);
+	    var labelY = arrowY + 3/2*ymult*labelDist/Math.sqrt(2);
+	}
 	newT.setAttribute("stroke","black");
 	newT.setAttribute("stroke-width",transWidth);
 	newT.setAttribute("fill","none");
@@ -80,16 +107,11 @@ var fsm = function(){
 	newT.setAttribute("sourceid",id1);
 
 
-	var arrowX = (x1 + x2)/2 + (controlDist*3/4 * Math.sin(theta));
-	var arrowY = (y1 + y2)/2 - (controlDist*3/4 * Math.cos(theta));
-	var newTheta = theta * 180 / Math.PI;
-	newTheta = x1 < x2 ? newTheta : newTheta + 180
-	
 	var arrow = document.createElementNS("http://www.w3.org/2000/svg","polygon");
 	arrow.setAttribute("fill","black");
 	arrow.setAttribute("stroke","black");
 	arrow.setAttribute("stroke-width","0px");
-	arrow.setAttribute("points",(arrowX + 10)+","+(arrowY)+" "+(arrowX - 5)+","+(arrowY - 5)+" "+(arrowX - 5)+","+(arrowY + 5));
+	arrow.setAttribute("points",(arrowX + 8)+","+(arrowY)+" "+(arrowX - 4)+","+(arrowY - 4)+" "+(arrowX - 4)+","+(arrowY + 4));
 	arrow.setAttribute("transform","rotate("+newTheta+" "+arrowX+" "+arrowY+")");
 
 	tgroup.appendChild(arrow);
@@ -97,9 +119,6 @@ var fsm = function(){
 
 	if(selectedLabel) deselectLabel();
 	var label = document.createElementNS("http://www.w3.org/2000/svg","text");
-	var labelDist = 8;
-	var labelX = arrowX + (labelDist * Math.sin(theta));
-	var labelY = arrowY - (labelDist * Math.cos(theta));
 	label.setAttribute("x", labelX);
 	label.setAttribute("y", labelY);
 	label.setAttribute("font-size","15px");
@@ -166,9 +185,7 @@ var fsm = function(){
 	
 	newCirc.addEventListener("mouseup",function() {
 	    if(drawingTransitions) {
-		if(selectedState === this) {
-		    deselectState();
-		} else if(selectedState === null) {
+		if(!selectedState) {
 		    selectState(this);
 		} else {
 		    makeTransition(selectedState, this);
