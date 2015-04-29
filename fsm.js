@@ -33,6 +33,7 @@ var fsm = function(){
     var minStateRad = 10;//minimum radius of each state
     var transWidth = "2px";//stroke-width of each transition path
     var stateWidth = "1px";//stroke-width of each state
+    var deletingTransWidth = "5px";//stroke-width of transitions when deleting
     var labelDist = 8;//distance between labels and transitions
     var svgWidth = svg.getAttribute("width");//width of the svg
     var svgHeight = svg.getAttribute("height");//height of the svg
@@ -158,10 +159,10 @@ var fsm = function(){
 			makeTransition(twoStates[0],twoStates[1],labelTexts[i]):
 			makeTransition(twoStates[1],twoStates[0],labelTexts[i]);
 		    t[0].setAttribute("stroke","red");
-		    t[0].setAttribute("stroke-width","8px");
+		    t[0].setAttribute("stroke-width",deletingTransWidth);
 		    t[1].setAttribute("fill","red");
 		    t[1].setAttribute("stroke","red");
-		    t[1].setAttribute("stroke-width","8px");
+		    t[1].setAttribute("stroke-width",deletingTransWidth);
 		} 
 		if(selectedLabel) deselectLabel();
 	    }
@@ -298,15 +299,20 @@ var fsm = function(){
 	    if(!deleting) {
 		deletingTransitions = true;
 		this.className = "toggledOn";
-		var allTransitions = document.getElementsByTagName("path");
+		var allTransitions = [];
+		for(var i = 0; i < transitions.childNodes.length; i++) {
+		    for(var j = 0; j < transitions.childNodes[i].childNodes.length; j += 2) {
+			allTransitions.push(transitions.childNodes[i].childNodes[j+1]);
+		    }
+		}
 		for(var i = 0; i < allTransitions.length; i++) {
 		    allTransitions[i].setAttribute("stroke","red");
-		    allTransitions[i].setAttribute("stroke-width","8px");
+		    allTransitions[i].setAttribute("stroke-width",deletingTransWidth);
 		}
 		var allArrows = document.getElementsByTagName("polygon");
 		for(var i = 0; i < allArrows.length; i++) {
 		    allArrows[i].setAttribute("stroke","red");
-		    allArrows[i].setAttribute("stroke-width","8px");
+		    allArrows[i].setAttribute("stroke-width",deletingTransWidth);
 		    allArrows[i].setAttribute("fill","red");
 		}
 	    }
@@ -362,7 +368,7 @@ var fsm = function(){
     
 	dsButton.className = "";
 	deletingStates = false;
-	var allStates = document.getElementsByTagName("circle");
+	var allStates = states.childNodes;
 	for(var i = 0; i < allStates.length; i++) {
 	    allStates[i].setAttribute("stroke","black");
 	    allStates[i].setAttribute("stroke-width",stateWidth);
@@ -370,18 +376,20 @@ var fsm = function(){
 
 	dtButton.className = "";
 	deletingTransitions = false;
-	var allTransitions = document.getElementsByTagName("path");
-	for(var i = 0; i < allTransitions.length; i++) {
-	    allTransitions[i].setAttribute("stroke","black");
-	    allTransitions[i].setAttribute("stroke-width",transWidth);
+	for(var i = 0; i < transitions.childNodes.length; i++) {
+	    var group = transitions.childNodes[i];
+	    for(var j = 0; j < group.childNodes.length; j++) {
+		var node = group.childNodes[j];
+		node.setAttribute("stroke","black");
+		if(node.tagName == "polygon") {
+		    node.setAttribute("fill","black");
+		    node.setAttribute("stroke-width","0px");
+		} else {
+		    node.setAttribute("stroke-width",transWidth);
+		}
+	    }
 	}
-	var allArrows = document.getElementsByTagName("polygon");
-	for(var i = 0; i < allArrows.length; i++) {
-	    allArrows[i].setAttribute("stroke","black");
-	    allArrows[i].setAttribute("fill","black");
-	    allArrows[i].setAttribute("stroke-width","0px");
-	}
-
+	
 	taButton.className = "";
 	togglingAccepting = false;
     }
