@@ -415,6 +415,36 @@ var fsm = function(){
 	    states.childNodes[i].setAttribute("r",stateRad);
 	for(var i = 0; i < acceptingStates.childNodes.length; i++)
 	    acceptingStates.childNodes[i].setAttribute("r",stateRad * acceptingRatio);
+	for(var i = 0; i < transitions.childNodes.length; i++) {
+	    var ids = transitions.childNodes[i].getAttribute("ids").split(" ");
+	    if(ids[0] == ids[1]) {
+		var tgroup = transitions.childNodes[i];
+		for(var j = 1; j < tgroup.childNodes.length; j+= 2) {
+		    console.log("here");
+		    var loop = tgroup.childNodes[j];
+		    var state = document.querySelector("circle[stateid='"+loop.getAttribute("sourceid")+"']");
+		    var statex = parseInt(state.getAttribute("cx"));
+		    var statey = parseInt(state.getAttribute("cy"));
+		    var transRad = 10*(j+1)/2;
+		    loop.setAttribute("r", transRad);
+		    var xmult =  statex < svgWidth/2 ? -1 : 1;
+		    var ymult =  statey < svgHeight/2 ? -1 : 1;
+		    loop.setAttribute("cx",statex + xmult*(stateRad+transRad)/Math.sqrt(2));
+		    loop.setAttribute("cy",statey + ymult*(stateRad+transRad)/Math.sqrt(2));
+		    
+		    var arrow = tgroup.childNodes[j-1];
+		    var arrowX = statex + xmult*(stateRad+2*transRad)/Math.sqrt(2);
+		    var arrowY = statey + ymult*(stateRad+2*transRad)/Math.sqrt(2);
+		    var newTheta = Math.atan(ymult/xmult) * 180 / Math.PI + 90;
+		    arrow.setAttribute("points",(arrowX + 8)+","+(arrowY)+" "+(arrowX - 4)+","+(arrowY - 4)+" "+(arrowX - 4)+","+(arrowY + 4));
+		    arrow.setAttribute("transform","rotate("+newTheta+" "+arrowX+" "+arrowY+")");
+
+		    var label = document.querySelector("text[labelid='"+loop.getAttribute("transid")+"']");
+		    label.setAttribute("x",arrowX + 3/2*xmult*labelDist/Math.sqrt(2));
+		    label.setAttribute("y",arrowY + 3/2*ymult*labelDist/Math.sqrt(2));
+		}
+	    }
+	}
     }
 
     //Set the state color to the given value if given a valid value. Correct it
