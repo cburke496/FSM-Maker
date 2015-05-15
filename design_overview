@@ -9,8 +9,10 @@ Design Overview:
          1.<polygon>: This is the arrow of the transition. It's black by
 	  default, but turns red when "Delete Transitions" is selected. It has
 	  no stroke. It stores no identifying information.
-	 2.<path>: This is the curve of the transition. It's also black by
-	  default and turns red when "Delete Transitions" is selected. It
+	 2.<path> or <citcle>: This is the curve of the transition ("path" 
+	  elements represent normal transitions, while "circle" elements 
+	  represent transitions from a state to itself). It's also black by 
+	  default and turns red when "Delete Transitions" is selected. It 
 	  carries with it two ids: "transid" matches the "labelid" of the 
 	  corresponding label and is used to identify the transition as a whole 
 	  (and thus is unique), while "sourceid" is the "stateid" of the source 
